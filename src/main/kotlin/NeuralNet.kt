@@ -6,7 +6,7 @@ class NeuralNet(val topology: List<Int>) {
 
     private val layers = (0 .. topology.size - 2).map { NeuralLayer(topology[it], topology[it + 1]) }
 
-    fun train(X: List<List<Double>>, Y: List<Double>, iteration:Int, learningRate: Double) : List<Double> {
+    fun train(X: List<List<Double>>, Y: List<Double>, learningRate: Double) : List<Double> {
         //forward pass
         val out = ArrayList<Pair<List<List<Double>>, List<List<Double>>>>()
         out.add(Pair(emptyList(), X)) //Inicializar
@@ -45,21 +45,7 @@ class NeuralNet(val topology: List<Int>) {
             layers[l].W = subtract(layers[l].W, matrixLr)
         }
 
-//        printSteps(out, Y)
         return out[out.size - 1].second.flatten()
-    }
-
-    private fun multiplyMatrices(matrixA: List<List<Double>>, matrixB: List<List<Double>>): List<List<Double>> {
-        val deltaCurrentLayer: List<List<Double>> = matrixA.mapIndexed { i, list ->
-            list.mapIndexed { j, _ -> matrixA[i][j] * matrixB[i][j] }
-        }
-        return deltaCurrentLayer
-    }
-    private fun subtract(matrixA: List<List<Double>>, matrixB: List<List<Double>>): List<List<Double>> {
-        val deltaCurrentLayer: List<List<Double>> = matrixA.mapIndexed { i, list ->
-            list.mapIndexed { j, _ -> matrixA[i][j] - matrixB[i][j] }
-        }
-        return deltaCurrentLayer
     }
 
     fun predict(X: List<List<Double>>): List<Double> {

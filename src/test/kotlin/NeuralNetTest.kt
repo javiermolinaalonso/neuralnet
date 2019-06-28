@@ -1,5 +1,3 @@
-import org.apache.commons.math3.geometry.Vector
-import org.apache.commons.math3.linear.MatrixUtils
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -16,7 +14,7 @@ class NeuralNetTest {
         val loss = ArrayList<Double>()
         var train = emptyList<Double>()
         for (i in 0..10000) {
-            train = neuralNet.train(inputs, results, i, 0.05)
+            train = neuralNet.train(inputs, results, 0.05)
                 loss.add(l2_cost(train, results))
         }
         assertTrue(l2_cost(train, results) < 0.001)
