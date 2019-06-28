@@ -62,22 +62,6 @@ class NeuralNet(val topology: List<Int>) {
         return deltaCurrentLayer
     }
 
-    private fun printSteps(out: ArrayList<Pair<List<List<Double>>, List<List<Double>>>>, Y: List<Double>) {
-        for (i in 0..10) {
-            print(out[out.size - 1].second.flatten()[i].round(1))
-            print(" ")
-        }
-        println()
-//        for (i in 0..10) {
-//            print(Y[i])
-//            print(" ")
-//        }
-//        println()
-        println("********")
-
-//        println(l2_cost(out[out.size - 1].second.flatten(), Y))
-    }
-
     fun predict(X: List<List<Double>>): List<Double> {
         val out = ArrayList<Pair<List<List<Double>>, List<List<Double>>>>()
         out.add(Pair(emptyList(), X)) //Inicializar
