@@ -4,25 +4,35 @@ import org.junit.jupiter.api.Test
 class NeuralNetTest {
 
     @Test
-    internal fun givenNeuralNetTopology_assertIsCorrect() {
-        val neuralNet = NeuralNet(listOf(2, 4, 1))
-
-        assertEquals(neuralNet.layers.size, 3, "Size of neural net is not correct")
-        assertEquals(neuralNet.layers[0].neurons.size, 2, "Size of neural layer is not correct")
-        assertEquals(neuralNet.layers[1].neurons.size, 4, "Size of neural layer is not correct")
-        assertEquals(neuralNet.layers[2].neurons.size, 1, "Size of neural layer is not correct")
-    }
-
-    @Test
     internal fun name() {
         val inputs: List<List<Double>> = "src/test/resources/coordinates.csv".readCsv(1).readAll().map { it.asList().map { it.toDouble() } }
         val results: List<Double> = "src/test/resources/coordinates_result.csv".readCsv(0).readAll().map { it[0].toDouble() }
 
         val neuralNet = NeuralNet(listOf(2,4,1))
 
-        neuralNet.train(inputs, results, 0.05)
+        neuralNet.train(inputs, results, 1, 0.05)
     }
 
+    @Test
+    internal fun iterateTest() {
+        val inputs: List<List<Double>> = "src/test/resources/basic/coordinates.csv".readCsv(1).readAll().map { it.asList().map { it.toDouble() } }
+        val results: List<Double> = "src/test/resources/basic/coordinates_result.csv".readCsv(0).readAll().map { it[0].toDouble() }
+
+        val neuralNet = NeuralNet(listOf(2, 4, 1))
+
+        val loss = ArrayList<Double>()
+        var train = emptyList<Double>()
+        for (i in 0..25000) {
+            train = neuralNet.train(inputs, results, i, 0.05)
+            if (i % 100 == 0) {
+                loss.add(l2_cost(train, results))
+            }
+        }
+
+        val X: List<List<Double>> = "src/test/resources/basic/coordinates_test.csv".readCsv(1).readAll().map { it.asList().map { it.toDouble() } }
+        val R: List<Double> = neuralNet.predict(X)
+        R.forEach { println(it) }
+    }
 
     @Test
     internal fun matrixMultiplicationTestSameSize() {
@@ -52,7 +62,6 @@ class NeuralNetTest {
         assertEquals(result[0], 58.0)
         assertEquals(result[1], 139.0)
     }
-
     @Test
     internal fun matrixMultiplicationTestDiferentSize() {
 //        [1 2 3] [ 7  8]   [58 64  ]
@@ -70,6 +79,7 @@ class NeuralNetTest {
         assertEquals(result[1][0], 139.0)
         assertEquals(result[1][1], 154.0)
     }
+
     @Test
     internal fun matrixVectorSum() {
 //        [1 2]+ [10  20]   [11 22  ]

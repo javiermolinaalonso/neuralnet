@@ -1,3 +1,5 @@
+import kotlin.math.round
+
 public fun <E> List<List<E>>.transpose(): List<List<E>> {
     val ret = ArrayList<List<E>>()
     val N = this[0].size
@@ -53,4 +55,11 @@ public fun List<List<Double>>.sumVector(vector: List<Double>): List<List<Double>
         }
     }
     return sum.map { it.toList() }
+}
+
+
+public fun Double.round(decimals: Int): Double {
+    var multiplier = 1.0
+    repeat(decimals) { multiplier *= 10 }
+    return round(this * multiplier) / multiplier
 }
