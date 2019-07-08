@@ -19,7 +19,7 @@ class NeuralNetTest {
             train = neuralNet.train(inputs, results, i, 0.05)
                 loss.add(l2_cost(train, results))
         }
-        assertTrue(l2_cost(train, results) < 0.001)
+        assertTrue(l2_cost(train, results) < 0.01)
 
         val X: List<List<Double>> = "src/test/resources/coordinates_test.csv".readCsv(1).readAll().map { it.asList().map { it.toDouble() } }
         val R: List<Double> = neuralNet.predict(X)
