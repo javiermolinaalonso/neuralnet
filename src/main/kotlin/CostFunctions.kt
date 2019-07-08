@@ -8,12 +8,3 @@ val l2_cost: (INDArray, INDArray) -> Double = {
 val l2_cost_derivate: (INDArray, INDArray) -> INDArray = {
     x, y -> x.sub(y)
 }
-
-
-val l2_cost_l: (List<Double>, List<Double>) -> Double = {
-//    x, y -> (1.0 / x.size) * (x.zip(y).map { pow(it.first - it.second, 2.0) }.sum())
-    x, y -> (0 until x.size).map { pow(x[it] - y[it], 2.0) }.average()
-}
-val l2_cost_l_derivate: (List<Double>, List<Double>) -> List<Double> = {
-    x, y -> (0 until x.size).map { x[it] - y[it] }
-}

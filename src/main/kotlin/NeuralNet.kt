@@ -14,16 +14,16 @@ class NeuralNet(val topology: List<Int>) {
         val out = predict(input)
 
         //Backward pass
-        var delta:INDArray? = null
+        var delta:INDArray = Nd4j.empty()
         for (l in layers.size - 1 downTo 0) {
             val nextLayerOutput = out[l + 1]
 
-            val r = if (delta == null) {
+            val deltaFromNextLayer = if (l == layers.size - 1) {
                 l2_cost_derivate(nextLayerOutput, expectedOutput)
             } else {
                 delta.mmul(layers[l + 1].W.transpose())
             }
-            delta = sigmoidDerivative(nextLayerOutput).mul(r)
+            delta = sigmoidDerivative(nextLayerOutput).mul(deltaFromNextLayer)
 
             //Gradient descent
             layers[l].b.subi(delta.mean(0).mul(learningRate))
