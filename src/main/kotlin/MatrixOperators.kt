@@ -1,20 +1,6 @@
 import kotlin.math.round
 
-
-fun multiplyMatrices(matrixA: List<List<Double>>, matrixB: List<List<Double>>): List<List<Double>> {
-    return matrixA.mapIndexed { i, list ->
-        list.mapIndexed { j, _ -> matrixA[i][j] * matrixB[i][j] }
-    }
-}
-
-fun subtract(matrixA: List<List<Double>>, matrixB: List<List<Double>>): List<List<Double>> {
-    val deltaCurrentLayer: List<List<Double>> = matrixA.mapIndexed { i, list ->
-        list.mapIndexed { j, _ -> matrixA[i][j] - matrixB[i][j] }
-    }
-    return deltaCurrentLayer
-}
-
-fun <E> List<List<E>>.transpose(): List<List<E>> {
+public fun <E> List<List<E>>.transpose(): List<List<E>> {
     val ret = ArrayList<List<E>>()
     val N = this[0].size
     for (i in 0 until N) {
@@ -27,7 +13,7 @@ fun <E> List<List<E>>.transpose(): List<List<E>> {
     return ret
 }
 
-operator fun List<List<Double>>.times(matrix: List<List<Double>>): List<List<Double>> {
+public operator fun List<List<Double>>.times(matrix: List<List<Double>>): List<List<Double>> {
     val r1 = this.size
     val c1 = this[0].size
     val c2 = matrix[0].size
@@ -43,7 +29,7 @@ operator fun List<List<Double>>.times(matrix: List<List<Double>>): List<List<Dou
     return product.map { it.toList() }
 }
 
-fun List<List<Double>>.multiplyVector(vector: List<Double>): List<Double> {
+public fun List<List<Double>>.multiplyVector(vector: List<Double>): List<Double> {
     val r1 = this.size
     val c1 = this[0].size
     val c2 = vector.size
@@ -57,7 +43,7 @@ fun List<List<Double>>.multiplyVector(vector: List<Double>): List<Double> {
     return product.toList()
 }
 
-fun List<List<Double>>.sumVector(vector: List<Double>): List<List<Double>> {
+public fun List<List<Double>>.sumVector(vector: List<Double>): List<List<Double>> {
     val r1 = this.size
     val c1 = this[0].size
     val c2 = vector.size
@@ -72,7 +58,7 @@ fun List<List<Double>>.sumVector(vector: List<Double>): List<List<Double>> {
 }
 
 
-fun Double.round(decimals: Int): Double {
+public fun Double.round(decimals: Int): Double {
     var multiplier = 1.0
     repeat(decimals) { multiplier *= 10 }
     return round(this * multiplier) / multiplier
