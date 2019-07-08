@@ -9,6 +9,6 @@ class CostFunctionsTest {
         val y = listOf(41.0, 45.0, 49.0, 47.0, 44.0)
         val cost = l2_cost(x, y)
         x.zip(y).map { Math.pow(it.first - it.second, 2.0) }.forEach { println(it) }
-        assertEquals(cost, 7.84)
+        assertEquals(cost, 6.2)
     }
 }
