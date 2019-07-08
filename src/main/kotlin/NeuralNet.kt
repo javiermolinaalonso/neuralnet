@@ -26,7 +26,10 @@ class NeuralNet(val topology: List<Int>) {
         for (l in layers.size - 1 downTo 0) {
             val a = out[l + 1].second
             if (l == layers.size - 1) {
-                deltas.add(a.sub(Y).mul(Transforms.sigmoid(a.sub(Y))))
+                val derivateCostFunctionVersusExpectedOutput = l2_cost_derivate(a, Y)
+                val derivateActivationLastLayer = Transforms.sigmoidDerivative(a)
+                val r = derivateActivationLastLayer.mul(derivateCostFunctionVersusExpectedOutput)
+                deltas.add(r) //necesario pq necesitamos una matriz de x.size x 1
             } else {
 
                 val derivateLayer = Transforms.sigmoidDerivative(a)
@@ -37,13 +40,10 @@ class NeuralNet(val topology: List<Int>) {
             }
 
             //Gradient descent
-            val mean = deltas[0].transpose().mul(learningRate)//Calculamos la media de los valores de entrada (La traspuesta es pq queremos la primera columna)
+            val mean = deltas[0].mean(0).mul(learningRate)//Calculamos la media de los valores de entrada (La traspuesta es pq queremos la primera columna)
             layers[l].b = layers[l].b.sub(mean)
 
-            val matrix = out[l].second.transpose().mmul(deltas[0])
-            val matrixLr = matrix.mul(learningRate)
-
-            layers[l].W = layers[l].W.sub(matrixLr)
+            layers[l].W.subi(out[l].second.transpose().mmul(deltas[0]).mul(learningRate))
         }
 
         return out[out.size - 1].second
@@ -55,7 +55,7 @@ class NeuralNet(val topology: List<Int>) {
         out.add(Pair(Nd4j.empty(), X)) //Inicializar
 
         layers.forEachIndexed { index, layer ->
-            val z: INDArray = (out[out.size - 1].second.mmul(layer.W)).sum(layer.b) //Sumas ponderadas de las neuronas
+            val z: INDArray = (out[out.size - 1].second.mmul(layer.W)).addRowVector(layer.b) //Sumas ponderadas de las neuronas
             val a: INDArray = Transforms.sigmoid(z)
             out.add(Pair(z, a))
         }
