@@ -1,70 +1,52 @@
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.factory.Nd4j
 import org.nd4j.linalg.ops.transforms.Transforms
-import java.lang.Math.random
-import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.random.Random
 
 
 class NeuralNet(val topology: List<Int>) {
 
     private val layers = (0 .. topology.size - 2).map { NeuralLayer(topology[it], topology[it + 1]) }
 
-    fun train(X: INDArray, Y: INDArray, learningRate: Double) : INDArray {
+    fun train(input: INDArray, expectedOutput: INDArray, learningRate: Double) : INDArray {
         //forward pass
-        val out = ArrayList<Pair<INDArray, INDArray>>()
-        out.add(Pair(Nd4j.empty(), X)) //Inicializar
+        val out = predict(input)
 
-        layers.forEachIndexed { index, layer ->
-            val z: INDArray = (out[out.size - 1].second.mmul(layer.W)).addRowVector(layer.b) //Sumas ponderadas de las neuronas
-            val a: INDArray = Transforms.sigmoid(z)
-            out.add(Pair(z, a))
-        }
-
-        val deltas = LinkedList<INDArray>()
         //Backward pass
+        var delta:INDArray? = null
         for (l in layers.size - 1 downTo 0) {
-            val a = out[l + 1].second
-            if (l == layers.size - 1) {
-                val derivateCostFunctionVersusExpectedOutput = l2_cost_derivate(a, Y)
-                val derivateActivationLastLayer = Transforms.sigmoidDerivative(a)
-                val r = derivateActivationLastLayer.mul(derivateCostFunctionVersusExpectedOutput)
-                deltas.add(r) //necesario pq necesitamos una matriz de x.size x 1
+            val nextLayerOutput = out[l + 1]
+
+            val r = if (delta == null) {
+                l2_cost_derivate(nextLayerOutput, expectedOutput)
             } else {
-
-                val derivateLayer = Transforms.sigmoidDerivative(a)
-                val matrixMult = deltas[0].mmul(layers[l+1].W.transpose())
-
-                val r = derivateLayer.mul(matrixMult)
-                deltas.addFirst(r)
+                delta.mmul(layers[l + 1].W.transpose())
             }
+            delta = sigmoidDerivative(nextLayerOutput).mul(r)
 
             //Gradient descent
-            val mean = deltas[0].mean(0).mul(learningRate)//Calculamos la media de los valores de entrada (La traspuesta es pq queremos la primera columna)
-            layers[l].b = layers[l].b.sub(mean)
-
-            layers[l].W.subi(out[l].second.transpose().mmul(deltas[0]).mul(learningRate))
+            layers[l].b.subi(delta.mean(0).mul(learningRate))
+            layers[l].W.subi(out[l].transpose().mmul(delta).mul(learningRate))
         }
 
-        return out[out.size - 1].second
+        return out.last()
     }
 
-    fun predict(X: INDArray): INDArray {
+    fun predict(X: INDArray): List<INDArray> {
         //forward pass
-        val out = ArrayList<Pair<INDArray, INDArray>>()
-        out.add(Pair(Nd4j.empty(), X)) //Inicializar
+        val out = ArrayList<INDArray>()
+        out.add(X) //Inicializar
 
-        layers.forEachIndexed { index, layer ->
-            val z: INDArray = (out[out.size - 1].second.mmul(layer.W)).addRowVector(layer.b) //Sumas ponderadas de las neuronas
-            val a: INDArray = Transforms.sigmoid(z)
-            out.add(Pair(z, a))
+        layers.forEach {
+            out.add(Transforms.sigmoid((out[out.size - 1].mmul(it.W)).addRowVector(it.b)))
         }
-        return out[out.size - 1].second
+
+        return out
     }
 }
 
 data class NeuralLayer(private val wSize:Int, private val numNeurons:Int) {
-    var b = Nd4j.create((0 until numNeurons).map { random() }.toDoubleArray()).reshape(1, numNeurons.toLong())
-    var W = Nd4j.create((0 until wSize * numNeurons).map { random() }.toDoubleArray()).reshape(wSize.toLong(), numNeurons.toLong())
+    var b = Nd4j.create((0 until numNeurons).map { Random.nextDouble(-1.0, 1.0) }.toDoubleArray()).reshape(1, numNeurons.toLong())
+    var W = Nd4j.create((0 until wSize * numNeurons).map { Random.nextDouble(-1.0, 1.0) }.toDoubleArray()).reshape(wSize.toLong(), numNeurons.toLong())
 }
-data class Neuron(var weights : List<Double>)
