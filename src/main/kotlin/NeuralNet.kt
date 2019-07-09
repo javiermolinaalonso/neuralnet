@@ -1,76 +1,52 @@
-import java.util.*
+import org.nd4j.linalg.api.ndarray.INDArray
+import org.nd4j.linalg.factory.Nd4j
+import org.nd4j.linalg.ops.transforms.Transforms
 import kotlin.collections.ArrayList
+import kotlin.random.Random
 
 
 class NeuralNet(val topology: List<Int>) {
 
     private val layers = (0 .. topology.size - 2).map { NeuralLayer(topology[it], topology[it + 1]) }
 
-    fun train(X: List<List<Double>>, Y: List<Double>, iteration:Int, learningRate: Double) : List<Double> {
+    fun train(input: INDArray, expectedOutput: INDArray, learningRate: Double) : INDArray {
         //forward pass
-        val out = ArrayList<Pair<List<List<Double>>, List<List<Double>>>>()
-        out.add(Pair(emptyList(), X)) //Inicializar
+        val out = predict(input)
 
-        layers.forEachIndexed { index, layer ->
-            val z = (out[out.size - 1].second * layer.W).sumVector(layer.b) //Sumas ponderadas de las neuronas
-            val a = z.map { it.map( sigmoid ) } // Salidas de las neuronas
-
-            out.add(Pair(z, a))
-        }
-
-        val deltas = LinkedList<List<List<Double>>>()
         //Backward pass
+        var delta:INDArray = Nd4j.empty()
         for (l in layers.size - 1 downTo 0) {
-            val a: List<List<Double>> = out[l + 1].second
-            if (l == layers.size - 1) {
-                val derivateCostFunctionVersusExpectedOutput: List<Double> = l2_cost_derivate(a.flatten(), Y)
-                val derivateActivationLastLayer: List<Double> = a.flatten().map(sigmoidDerivate)
-                val r: List<List<Double>> = derivateActivationLastLayer.zip(derivateCostFunctionVersusExpectedOutput).map { listOf(it.first * it.second) }
-                deltas.add(r) //necesario pq necesitamos una matriz de x.size x 1
-            } else {
-                val derivateLayer: List<List<Double>> = a.map { it.map(sigmoidDerivate)}
-                val matrixMult: List<List<Double>> = deltas[0] * layers[l+1].W.transpose()
+            val nextLayerOutput = out[l + 1]
 
-                val r: List<List<Double>> = multiplyMatrices(derivateLayer, matrixMult)
-                deltas.addFirst(r)
+            val deltaFromNextLayer = if (l == layers.size - 1) {
+                l2_cost_derivate(nextLayerOutput, expectedOutput)
+            } else {
+                delta.mmul(layers[l + 1].W.transpose())
             }
+            delta = sigmoidDerivative(nextLayerOutput).mul(deltaFromNextLayer)
 
             //Gradient descent
-            val mean: List<Double> = deltas[0].transpose().map { it.average() * learningRate } //Calculamos la media de los valores de entrada (La traspuesta es pq queremos la primera columna)
-            layers[l].b = layers[l].b.mapIndexed { index, d -> d - mean[index]}
-
-            val matrix: List<List<Double>> = out[l].second.transpose() * deltas[0]
-            val matrixLr: List<List<Double>> = matrix.map { it.map { it * learningRate } }
-
-            layers[l].W = subtract(layers[l].W, matrixLr)
+            layers[l].b.subi(delta.mean(0).mul(learningRate))
+            layers[l].W.subi(out[l].transpose().mmul(delta).mul(learningRate))
         }
 
-//        printSteps(out, Y)
-        return out[out.size - 1].second.flatten()
+        return out.last()
     }
 
-    private fun multiplyMatrices(matrixA: List<List<Double>>, matrixB: List<List<Double>>): List<List<Double>> {
-        val deltaCurrentLayer: List<List<Double>> = matrixA.mapIndexed { i, list ->
-            list.mapIndexed { j, _ -> matrixA[i][j] * matrixB[i][j] }
-        }
-        return deltaCurrentLayer
-    }
-    private fun subtract(matrixA: List<List<Double>>, matrixB: List<List<Double>>): List<List<Double>> {
-        val deltaCurrentLayer: List<List<Double>> = matrixA.mapIndexed { i, list ->
-            list.mapIndexed { j, _ -> matrixA[i][j] - matrixB[i][j] }
-        }
-        return deltaCurrentLayer
-    }
+    fun predict(X: INDArray): List<INDArray> {
+        //forward pass
+        val out = ArrayList<INDArray>()
+        out.add(X) //Inicializar
 
-    fun predict(X: List<List<Double>>): List<Double> {
-        val out = ArrayList<Pair<List<List<Double>>, List<List<Double>>>>()
-        out.add(Pair(emptyList(), X)) //Inicializar
-        layers.forEachIndexed { index, layer ->
-            val z = (out[out.size - 1].second * layer.W).sumVector(layer.b) //Sumas ponderadas de las neuronas
-            val a = z.map { it.map( sigmoid ) } // Salidas de las neuronas
-
-            out.add(Pair(z, a))
+        layers.forEach {
+            out.add(Transforms.sigmoid((out[out.size - 1].mmul(it.W)).addRowVector(it.b)))
         }
-        return out[out.size - 1].second.flatten()
+
+        return out
     }
+}
+
+data class NeuralLayer(private val wSize:Int, private val numNeurons:Int) {
+    var b = Nd4j.create((0 until numNeurons).map { Random.nextDouble(-1.0, 1.0) }.toDoubleArray()).reshape(1, numNeurons.toLong())
+    var W = Nd4j.create((0 until wSize * numNeurons).map { Random.nextDouble(-1.0, 1.0) }.toDoubleArray()).reshape(wSize.toLong(), numNeurons.toLong())
 }
