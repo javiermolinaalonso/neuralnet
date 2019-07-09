@@ -32,12 +32,6 @@
             <version>${kotlin.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.holgerbrandl</groupId>
-            <artifactId>kravis</artifactId>
-            <version>0.5</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.nd4j/nd4j-api -->
-        <dependency>
             <groupId>org.nd4j</groupId>
             <artifactId>nd4j-api</artifactId>
             <version>${nd4j.version}</version>
