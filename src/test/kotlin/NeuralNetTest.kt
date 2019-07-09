@@ -1,5 +1,8 @@
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
+import org.nd4j.evaluation.regression.RegressionEvaluation
+import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.factory.Nd4j
 import kotlin.math.roundToInt
 
@@ -12,25 +15,27 @@ class NeuralNetTest {
 
         val neuralNet = NeuralNet(listOf(2, 4, 1))
 
-        var train = neuralNet.train(inputs, results, 0.05)
-        for (i in 0..3000) {
+        var train: INDArray
+        var i = 0
+        do {
             train = neuralNet.train(inputs, results, 0.05)
-        }
-        assertTrue(l2_cost(train, results) < 0.01)
-        (-100..100 step 2).forEach {x ->
-            (-100..100 step 2).forEach { y ->
-                val value = Nd4j.create(doubleArrayOf(x.toDouble() / 100.0, y.toDouble() / 100.0)).reshape(1, 2)
-                neuralNet.predict(value).last().toDoubleVector().forEach { print(it.roundToInt().toString() + " ") }
-            }
-            println()
+
+            val re = RegressionEvaluation()
+            re.eval(train, results)
+            i++
+            println(re.averageMeanSquaredError())
+        } while (re.averageMeanSquaredError() > 0.01 || i < 10000)
+
+        if (i >= 10000) {
+            fail<String>("Unable to find the solution")
         }
 
         val X = Nd4j.create("src/test/resources/coordinates_test.csv".readCsv(1).readAll().flatMap { it.map { it.toDouble() } }.toDoubleArray()).reshape(4, 2)
         val R = neuralNet.predict(X).last()
-        assertEquals(Math.round(R.getDouble(0)), 1L)
-        assertEquals(Math.round(R.getDouble(1)), 1L)
-        assertEquals(Math.round(R.getDouble(2)), 1L)
-        assertEquals(Math.round(R.getDouble(3)), 0L)
+        assertEquals(R.getDouble(0).roundToInt(), 1)
+        assertEquals(R.getDouble(1).roundToInt(), 1)
+        assertEquals(R.getDouble(2).roundToInt(), 1)
+        assertEquals(R.getDouble(3).roundToInt(), 0)
 
     }
 

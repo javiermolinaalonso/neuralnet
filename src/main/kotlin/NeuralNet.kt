@@ -19,7 +19,7 @@ class NeuralNet(val topology: List<Int>) {
             val nextLayerOutput = out[l + 1]
 
             val deltaFromNextLayer = if (l == layers.size - 1) {
-                l2_cost_derivate(nextLayerOutput, expectedOutput)
+                nextLayerOutput.sub(expectedOutput)
             } else {
                 delta.mmul(layers[l + 1].W.transpose())
             }
